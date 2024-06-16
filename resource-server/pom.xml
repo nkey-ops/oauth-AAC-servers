@@ -9,7 +9,7 @@
         <version>1.0</version>
     </parent>
 
-    <groupId>taco</groupId>
+    <groupId>resorce</groupId>
     <artifactId>resource-server</artifactId>
     <version>1.0-SNAPSHOT</version>
 
