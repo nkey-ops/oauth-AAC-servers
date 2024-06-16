@@ -1,5 +1,7 @@
 package tacos.web;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,7 +50,7 @@ public class DesignTacoController {
 
   @ModelAttribute(name = "taco")
   public Taco taco() {
-    return new Taco();
+    return new Taco("taco", new ArrayList<>());
   }
 
   @GetMapping
