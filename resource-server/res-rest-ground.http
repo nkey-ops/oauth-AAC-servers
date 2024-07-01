@@ -1,3 +1,35 @@
+POST {{rshost}}/oauth2/authorization/my-oidc-provider
+Cookie: {{JID_R}}
+
+#login enpoing to intiate logining process into AS  
+GET http://localhost:9999/oauth2/authorization/rs-client
+
+{%
+ _G.gas_header("Location", ".*", context, "AUTZ_RS")
+ _G.gas_header("Set-Cookie", "JS.-;", context, "JID_RS")
+%}
+
+#redirect to as to login 
+# if JID_AS is logged in return code
+GET {{AUTZ_RS}}
+Cookie: {{JID_AS}} 
+
+{%
+  _G.gas_header("Set-Cookie", "JSESSIONID=.-;", context, "JID_AS")
+  _G.gas_header("Location", ".*", context, "RED_CODE_URL")
+%}
+
+GET {{RED_CODE_URL}}
+Cookie: {{JID_RS}}
+
+{%
+  _G.gas_header("Set-Cookie", "JSESSIONID=.-;", context, "JID_RS")
+%}
+
+GET {{rs_url}}/ingredients
+Cookie: {{JID_RS}}
+
+
 POST localhost:9999/login
 
 -d username=res-admin

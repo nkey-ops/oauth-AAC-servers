@@ -1,13 +1,12 @@
 package resourceserver.sevice;
 
-import jakarta.validation.constraints.NotNull;
 import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,7 +20,8 @@ import org.springframework.security.oauth2.server.authorization.oidc.http.conver
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestTemplate;
+
+import jakarta.validation.constraints.NotNull;
 import resourceserver.data.UserRepository;
 import resourceserver.domain.User;
 
@@ -109,7 +109,12 @@ public class AuthorizationServerService {
     return response.getAccessToken();
   }
 
-  public RegisteredClient createRegistereClient(User user) {
+  /**
+   * Register client on then AuthorizationServer
+   * @param user to be registered
+   * @return registered client
+   */
+  public RegisteredClient registerClient(User user) {
     Objects.requireNonNull(user);
     OAuth2AccessToken clientRegistrationAccessToken = getClientRegistrationAccessToken();
 
@@ -118,7 +123,7 @@ public class AuthorizationServerService {
         HttpHeaders.AUTHORIZATION, "Bearer " + clientRegistrationAccessToken.getTokenValue());
     headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
-    var clientRegistration =
+    var clientRegistrationRequest =
         OidcClientRegistration.builder()
             .clientName(user.getUsername())
             .redirectUri(baseUrl + "/login/oauth2/code/" + user.getUsername())
@@ -129,31 +134,30 @@ public class AuthorizationServerService {
             .post()
             .uri(clientRegistrationEndpoint)
             .headers(h -> h.addAll(headers))
-            .body(clientRegistration)
+            .body(clientRegistrationRequest)
             .retrieve()
             .toEntity(OidcClientRegistration.class);
 
     if (responseEntity.getStatusCode() != HttpStatus.CREATED) {
       throw new IllegalStateException(
           String.format(
-              "The authorization server client wasn't created due to [%s]: %s",
+              "The authorization server didn't reigistere the cliennt due to [%s]: %s",
               responseEntity.getStatusCode(), responseEntity.getBody()));
     }
 
     log.debug(
-        "Response: {}{}{}",
+        "Registere a Client Response: {}{}{}",
         responseEntity.getStatusCode() + System.lineSeparator(),
         responseEntity.getHeaders() + System.lineSeparator(),
         responseEntity.getBody().getClaims());
 
-    var registeredClient = responseEntity.getBody();
-    user.setClientId(registeredClient.getClientId());
-    // TODO Time-limited
-    user.setRegistrationAccessToken(registeredClient.getRegistrationAccessToken());
-
+    var clientRegistrationResponse = responseEntity.getBody();
+    user.setClientId(clientRegistrationResponse.getClientId());
+    // TODO Time-limited I guess here should be set client secret and id
+    user.setRegistrationAccessToken(clientRegistrationResponse.getRegistrationAccessToken());
     user = userRepository.save(user);
 
-    return oidcClientRegistrationRegisteredClientConverter.convert(registeredClient);
+    return oidcClientRegistrationRegisteredClientConverter.convert(clientRegistrationResponse);
   }
 
   @NotNull
@@ -189,7 +193,7 @@ public class AuthorizationServerService {
     }
 
     log.debug(
-        "Response: {}{}{}",
+        "getClientInfo Response: {}{}{}",
         responseEntity.getStatusCode() + System.lineSeparator(),
         responseEntity.getHeaders() + System.lineSeparator(),
         responseEntity.getBody().getClaims());

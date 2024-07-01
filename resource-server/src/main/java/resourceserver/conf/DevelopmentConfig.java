@@ -5,6 +5,7 @@ import java.util.Arrays;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,10 +17,9 @@ import resourceserver.data.UserRepository;
 import resourceserver.domain.Ingredient;
 import resourceserver.domain.Ingredient.Type;
 import resourceserver.domain.Taco;
-import resourceserver.domain.TacoOrder;
-import resourceserver.domain.User;
 
 @Configuration
+@Profile("dev")
 public class DevelopmentConfig {
 
   @Bean
@@ -53,12 +53,6 @@ public class DevelopmentConfig {
       salsa = inRepo.save(salsa);
       sourCream = inRepo.save(sourCream);
 
-      Taco taco =
-          tacoRepo.save(
-              new Taco(
-                  "Carnivore",
-                  Arrays.asList(flourTortilla, groundBeef, carnitas, sourCream, salsa, cheddar)));
-
       tacoRepo.save(
           new Taco(
               "Bovine Bounty", Arrays.asList(cornTortilla, groundBeef, cheddar, jack, sourCream)));
@@ -66,26 +60,6 @@ public class DevelopmentConfig {
       tacoRepo.save(
           new Taco(
               "Veg-Out", Arrays.asList(flourTortilla, cornTortilla, tomatoes, lettuce, salsa)));
-
-      User hab = new User("habuma", encoder.encode("password"), "ROLE_ADMIN");
-      userRepo.save(hab);
-      userRepo.save(new User("tacochef", encoder.encode("password"), "ROLE_ADMIN"));
-
-      TacoOrder order =
-          new TacoOrder(
-              "Colorado",
-              "Green Line",
-              "Kansas",
-              "Colorado",
-              "20202",
-              "12312312311231",
-              "10/25",
-              "123",
-              userRepo.findById(hab.getId()).get());
-
-      orderRepo.save(order);
-      order.addTaco(taco);
-      orderRepo.save(order);
     };
   }
 

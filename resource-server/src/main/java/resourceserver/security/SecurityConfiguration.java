@@ -1,11 +1,11 @@
 package resourceserver.security;
 
-import jakarta.servlet.annotation.WebFilter;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.actuate.web.exchanges.HttpExchangeRepository;
 import org.springframework.boot.actuate.web.exchanges.InMemoryHttpExchangeRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
@@ -18,6 +18,8 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
+
+import jakarta.servlet.annotation.WebFilter;
 import resourceserver.data.UserRepository;
 import resourceserver.domain.User;
 import resourceserver.security.Authorities.Ingredients;
@@ -30,11 +32,11 @@ public class SecurityConfiguration {
 
   @Bean
   SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-    return http.authorizeHttpRequests(
+    return http.oauth2Login(Customizer.withDefaults())
+        .authorizeHttpRequests(
             a -> a.requestMatchers("/actuator/**").permitAll().anyRequest().authenticated())
         .formLogin(Customizer.withDefaults())
         .csrf(c -> c.disable())
-        .oauth2ResourceServer(r -> r.jwt(Customizer.withDefaults()))
         .build();
   }
 
@@ -50,8 +52,6 @@ public class SecurityConfiguration {
       User user = new User("user", passwordEncoder.encode("password"), "USER");
       userRepository.save(admin);
       userRepository.save(user);
-
-      authService.createRegistereClient(user);
     };
   }
 
@@ -61,11 +61,13 @@ public class SecurityConfiguration {
   }
 
   @Bean
+  @Profile("dev")
   public HttpExchangeRepository httpExchangesProperties() {
     return new InMemoryHttpExchangeRepository();
   }
 
   @Bean
+  @Profile("dev")
   public CommonsRequestLoggingFilter logFilter() {
 
     @Order(value = Ordered.HIGHEST_PRECEDENCE)
@@ -83,7 +85,8 @@ public class SecurityConfiguration {
     return filter;
   }
 
-  @Bean
+  // @Bean
+  // @Profile("dev")
   public JwtAuthenticationConverter jAuthenticationConverter() {
     JwtGrantedAuthoritiesConverter jwtGrandConverter = new JwtGrantedAuthoritiesConverter();
 

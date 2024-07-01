@@ -41,6 +41,5 @@ public class IngredientsRestController {
   @PreAuthorize("hasAuthority('" + Ingredients.Delete.INGREDIENT + "')")
   public void delteIngredient(@PathVariable("id") String id) {
     ingredientRepository.deleteById(id);
-    ;
   }
 }

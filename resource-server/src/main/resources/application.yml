@@ -7,10 +7,8 @@ logging:
       apache:
         logging: DEBUG
       springframework:
-        web: DEBUG
-        # web:
-        #   filter:
-        #     CommonsRequestLoggingFilter: DEBUG
+        web: TRACE
+        security: TRACE
     resourceserver: TRACE
     httpclient:
       wire: DEBUG
@@ -19,10 +17,21 @@ logging:
 spring:
   security:
     oauth2:
+      client:
+        registration:
+          rs-client:
+            provider: as-provider
+            client-id: rs-client-id
+            client-secret: rs-client-secret
+            authorization-grant-type: authorization_code
+            scope: openid,profile
+        provider:
+          as-provider:
+            issuer-uri: http://localhost:9000
+              
       resourceserver:
         jwt:
           issuer-uri: http://localhost:9000
-          audiences: res-admin-client
 
 management:
   endpoints:
